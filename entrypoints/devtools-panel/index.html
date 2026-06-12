@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NetDigest</title>
+  </head>
+  <body>
+    <header>
+      <div class="toolbar">
+        <strong class="brand">NetDigest</strong>
+        <span class="spacer"></span>
+        <button id="api-map" class="btn" title="Build a condensed API map (normalized endpoints + example shapes), copy it and preview it">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="6" cy="6" r="3" />
+            <circle cx="6" cy="18" r="3" />
+            <circle cx="18" cy="12" r="3" />
+            <path d="M9 6h4a2 2 0 0 1 2 2v2" />
+            <path d="M9 18h4a2 2 0 0 0 2-2v-2" />
+          </svg>
+          <span class="btn-label">API map</span>
+        </button>
+        <button id="copy" class="btn primary" title="Copy the TOON export">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="9" y="9" width="11" height="11" rx="2" />
+            <path d="M5 15V5a2 2 0 0 1 2-2h10" />
+          </svg>
+          <span class="btn-label">Copy TOON</span>
+        </button>
+        <button id="download" class="btn" title="Download the TOON export">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <path d="m7 10 5 5 5-5" />
+            <path d="M12 15V3" />
+          </svg>
+          <span class="btn-label">Download</span>
+        </button>
+        <button id="clear" class="btn danger" title="Clear the capture">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 6h18" />
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+            <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+            <path d="M10 11v6" />
+            <path d="M14 11v6" />
+          </svg>
+          <span class="btn-label">Clear</span>
+        </button>
+      </div>
+      <div class="filters">
+        <label class="chip" title="XHR/fetch calls with API-like content (JSON, XML…) — excludes images, fonts, HTML/RSC text and binaries even when loaded via fetch. Errors (4xx/5xx/failed) are ALWAYS kept, whatever their content type.">
+          <input type="checkbox" id="api-only" checked /><span>API only</span>
+        </label>
+        <label class="chip" title="Only show requests to the inspected page's domain (subdomains included)">
+          <input type="checkbox" id="same-site" checked /><span>same domain</span>
+        </label>
+        <label class="chip" title="Include whitelisted debug headers (cache, CORS, tracing) in exports — auth and cookies are never captured">
+          <input type="checkbox" id="headers" /><span>headers</span>
+        </label>
+        <label class="chip" title="Show only recorded actions (clicks, form submits, navigations) — no requests. The user-flow story on its own.">
+          <input type="checkbox" id="flow-only" /><span>flow only</span>
+        </label>
+        <label class="chip" title="Collapse query-param variations: keep only the first request per method + URL path (e.g. one /api/param-libs instead of all TYP_LIBSIMPLE=… variants)">
+          <input type="checkbox" id="unique" /><span>1 per endpoint</span>
+        </label>
+        <div id="detail" class="seg" role="radiogroup" title="Export detail — S: 64 chars / 1 item / depth 3 · M: 255 / 3 / depth 6 · L: 1024 / 8 / depth 10. All object keys are always kept.">
+          <button data-level="S">S</button>
+          <button data-level="M" class="on">M</button>
+          <button data-level="L">L</button>
+        </div>
+        <button id="record" class="btn mini" title="Record page interactions: clicks, form submits and navigations become timeline steps that explain the flow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="12" cy="12" r="8" />
+            <circle cx="12" cy="12" r="3.5" fill="currentColor" stroke="none" />
+          </svg>
+          <span class="btn-label">Record</span>
+        </button>
+        <span class="spacer"></span>
+        <span id="count">0 captured</span>
+      </div>
+    </header>
+    <main>
+      <section id="left">
+        <div class="search-wrap">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+          <input id="search" type="search" placeholder="Filter: URL, method, status…" autocomplete="off" />
+        </div>
+        <ul id="list"></ul>
+      </section>
+      <div
+        id="resizer"
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize panes"
+        tabindex="0"
+        title="Drag to resize • double-click: default width"
+      ></div>
+      <section id="right">
+        <div id="override" hidden>
+          <span class="ov-label">Selected endpoint override:</span>
+          <label title="Array items kept for this endpoint (overrides S/M/L)">items <input id="ov-items" type="number" min="1" max="500" /></label>
+          <label title="Nesting depth kept for this endpoint (overrides S/M/L)">depth <input id="ov-depth" type="number" min="1" max="12" /></label>
+          <label title="Characters kept per string for this endpoint (overrides S/M/L)">chars <input id="ov-chars" type="number" min="8" max="4096" /></label>
+          <span class="spacer"></span>
+          <button id="ov-copy" class="btn mini" title="Copy the preview exactly as shown (current override applied)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="9" y="9" width="11" height="11" rx="2" />
+              <path d="M5 15V5a2 2 0 0 1 2-2h10" />
+            </svg>
+            <span class="btn-label">copy</span>
+          </button>
+          <button id="ov-clear" class="btn mini" title="Remove the override for the selected endpoint(s)">reset</button>
+        </div>
+        <pre id="preview">Reload the target page, then select a request to see its compact version.</pre>
+      </section>
+    </main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
