@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NetDigest — Network → tokens</title>
+    <meta
+      name="description"
+      content="A DevTools panel that turns noisy network traffic into a compact, secret-free TOON digest — small enough to paste into an LLM, complete enough to debug with."
+    />
+    <link rel="icon" href="./icon.svg" />
+    <style>
+      :root {
+        --bg: #0a101c;
+        --text: #e7edf5;
+        --muted: #93a3b8;
+        --faint: #64748b;
+        --accent: #3a6ea5;
+        --accent-2: #5e92cc;
+        --accent-3: #8ab8e8;
+        --line: rgba(138, 184, 232, 0.14);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+      }
+
+      body {
+        font: 16px/1.6 system-ui, -apple-system, 'Segoe UI', sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(55% 42% at 50% -4%, rgba(58, 110, 165, 0.34), transparent 70%),
+          radial-gradient(40% 34% at 88% 28%, rgba(94, 146, 204, 0.1), transparent 70%),
+          radial-gradient(46% 36% at 8% 76%, rgba(58, 110, 165, 0.1), transparent 70%),
+          var(--bg);
+        min-height: 100vh;
+      }
+
+      .wrap {
+        max-width: 1160px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+
+      /* ---- Hero ---- */
+
+      header.hero {
+        padding: 88px 0 44px;
+        text-align: center;
+      }
+
+      .logo {
+        width: 84px;
+        height: 84px;
+        margin: 0 auto 26px;
+        display: block;
+        filter: drop-shadow(0 0 28px rgba(94, 146, 204, 0.55)) drop-shadow(0 6px 18px rgba(0, 0, 0, 0.5));
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 56px;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+        font-weight: 800;
+      }
+
+      .tagline {
+        margin: 10px 0 0;
+        font-size: 24px;
+        color: var(--muted);
+        font-weight: 500;
+      }
+
+      .tagline .arrow {
+        color: var(--accent-3);
+      }
+
+      .sub {
+        max-width: 640px;
+        margin: 18px auto 0;
+        color: var(--muted);
+        font-size: 17px;
+      }
+
+      .sub strong {
+        color: var(--text);
+        font-weight: 600;
+      }
+
+      .cta {
+        margin-top: 30px;
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        height: 46px;
+        padding: 0 22px;
+        border-radius: 12px;
+        font-size: 15.5px;
+        font-weight: 600;
+        text-decoration: none;
+        color: var(--text);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
+        border: 1px solid rgba(138, 184, 232, 0.22);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.07),
+          0 1px 2px rgba(0, 0, 0, 0.3),
+          0 8px 24px -10px rgba(0, 0, 0, 0.6);
+        transition: transform 0.12s, box-shadow 0.12s, border-color 0.12s;
+      }
+
+      .btn:hover {
+        transform: translateY(-1px);
+        border-color: rgba(138, 184, 232, 0.4);
+      }
+
+      .btn.primary {
+        background: linear-gradient(180deg, #4f83bd, #38679b);
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        color: #fff;
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.22),
+          0 1px 2px rgba(0, 0, 0, 0.35),
+          0 10px 32px -8px rgba(58, 110, 165, 0.7);
+      }
+
+      .btn svg {
+        width: 17px;
+        height: 17px;
+      }
+
+      /* ---- Device frame (macOS window) ---- */
+
+      .frame-zone {
+        padding: 26px 0 14px;
+      }
+
+      .frame {
+        /* gradient border: 1px padding + inner surface */
+        padding: 1px;
+        border-radius: 18px;
+        background: linear-gradient(180deg, rgba(138, 184, 232, 0.38), rgba(138, 184, 232, 0.05) 55%, rgba(138, 184, 232, 0.12));
+        box-shadow:
+          0 0 0 1px rgba(0, 0, 0, 0.4),
+          0 2px 4px rgba(0, 0, 0, 0.3),
+          0 12px 24px -8px rgba(0, 0, 0, 0.5),
+          0 32px 80px -16px rgba(0, 0, 0, 0.6),
+          0 0 120px -24px rgba(58, 110, 165, 0.5);
+      }
+
+      .frame-inner {
+        border-radius: 17px;
+        overflow: hidden;
+        background: #161c28;
+      }
+
+      .titlebar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 11px 14px;
+        background: linear-gradient(180deg, #1d2532, #171e2a);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.45);
+      }
+
+      .dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.25);
+      }
+
+      .dot.r {
+        background: #ff5f57;
+      }
+
+      .dot.y {
+        background: #febc2e;
+      }
+
+      .dot.g {
+        background: #28c840;
+      }
+
+      .titlebar .title {
+        flex: 1;
+        text-align: center;
+        font-size: 13px;
+        color: var(--faint);
+        margin-right: 52px; /* visually center vs the 3 dots */
+      }
+
+      .frame iframe {
+        display: block;
+        width: 100%;
+        height: 640px;
+        border: 0;
+        background: #1b212b;
+      }
+
+      .live-hint {
+        text-align: center;
+        color: var(--faint);
+        font-size: 14px;
+        margin: 16px 0 0;
+      }
+
+      .live-hint .pulse {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #82b899;
+        margin-right: 7px;
+        animation: pulse 1.6s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        50% {
+          opacity: 0.3;
+        }
+      }
+
+      /* ---- Features ---- */
+
+      .features {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(245px, 1fr));
+        gap: 14px;
+        padding: 56px 0 8px;
+      }
+
+      .card {
+        padding: 1px;
+        border-radius: 14px;
+        background: linear-gradient(180deg, rgba(138, 184, 232, 0.2), rgba(138, 184, 232, 0.03));
+      }
+
+      .card-inner {
+        height: 100%;
+        border-radius: 13px;
+        padding: 18px 18px 16px;
+        background: linear-gradient(180deg, #121a28, #0e1521);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+      }
+
+      .card h3 {
+        margin: 0 0 6px;
+        font-size: 15.5px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .card h3 .tag {
+        font-family: ui-monospace, Consolas, monospace;
+        font-size: 12px;
+        color: var(--accent-3);
+        background: rgba(94, 146, 204, 0.12);
+        border: 1px solid rgba(94, 146, 204, 0.25);
+        border-radius: 6px;
+        padding: 2px 7px;
+      }
+
+      .card p {
+        margin: 0;
+        font-size: 13.5px;
+        color: var(--muted);
+      }
+
+      /* ---- Steps ---- */
+
+      .steps {
+        display: flex;
+        gap: 26px;
+        justify-content: center;
+        flex-wrap: wrap;
+        padding: 34px 0 10px;
+        color: var(--muted);
+        font-size: 15px;
+      }
+
+      .steps b {
+        color: var(--text);
+      }
+
+      .steps .n {
+        display: inline-flex;
+        width: 22px;
+        height: 22px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: rgba(94, 146, 204, 0.16);
+        color: var(--accent-3);
+        font-size: 12.5px;
+        font-weight: 700;
+        margin-right: 8px;
+      }
+
+      footer {
+        text-align: center;
+        color: var(--faint);
+        font-size: 13.5px;
+        padding: 46px 0 38px;
+      }
+
+      footer a {
+        color: var(--muted);
+      }
+
+      @media (max-width: 640px) {
+        h1 {
+          font-size: 40px;
+        }
+
+        .frame iframe {
+          height: 520px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="hero wrap">
+      <img class="logo" src="./icon.svg" alt="NetDigest logo" />
+      <h1>NetDigest</h1>
+      <p class="tagline">Network <span class="arrow">→</span> tokens</p>
+      <p class="sub">
+        A DevTools panel that turns noisy network traffic into a <strong>compact, secret-free TOON digest</strong> —
+        small enough to paste into an LLM, complete enough to debug with.
+      </p>
+      <div class="cta">
+        <a class="btn primary" href="https://github.com/djdevpro/net-digest/releases" title="Chrome Web Store listing coming soon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>
+          Add to Chrome
+        </a>
+        <a class="btn" href="https://github.com/djdevpro/net-digest">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33s1.71.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2z"/></svg>
+          View on GitHub
+        </a>
+      </div>
+    </header>
+
+    <section class="frame-zone wrap">
+      <div class="frame">
+        <div class="frame-inner">
+          <div class="titlebar">
+            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+            <span class="title">DevTools — NetDigest</span>
+          </div>
+          <iframe src="./app/demo.html" title="NetDigest live demo" loading="lazy"></iframe>
+        </div>
+      </div>
+      <p class="live-hint">
+        <span class="pulse"></span>This is the <b>real extension</b>, running live on scripted demo traffic — click rows,
+        switch S/M/L, try the API map, copy the TOON.
+      </p>
+    </section>
+
+    <section class="features wrap">
+      <div class="card"><div class="card-inner">
+        <h3><span class="tag">×12</span> Dedup &amp; diff</h3>
+        <p>Identical calls merge into one entry; array items after the first only show what changed. The shape once, never twice.</p>
+      </div></div>
+      <div class="card"><div class="card-inner">
+        <h3><span class="tag">***</span> Secrets redacted</h3>
+        <p>Passwords, tokens, API keys and JWT-looking values are stripped at capture time. Auth headers never reach memory.</p>
+      </div></div>
+      <div class="card"><div class="card-inner">
+        <h3><span class="tag">S·M·L</span> Budget control</h3>
+        <p>Three detail levels, a live token counter, and per-endpoint overrides when one response deserves more.</p>
+      </div></div>
+      <div class="card"><div class="card-inner">
+        <h3><span class="tag">⚑ REC</span> Flow recorder</h3>
+        <p>Clicks, form submits and SPA navigations become timeline steps — the model sees what triggered every request.</p>
+      </div></div>
+      <div class="card"><div class="card-inner">
+        <h3><span class="tag">{ }</span> API map</h3>
+        <p>One click condenses the traffic into a normalized endpoint contract: methods, statuses, query keys, example shapes.</p>
+      </div></div>
+      <div class="card"><div class="card-inner">
+        <h3><span class="tag">src/</span> Initiators</h3>
+        <p>Source maps resolve every call back to the hook that fired it — <code>useArticles.useQuery</code>, not a hashed chunk.</p>
+      </div></div>
+    </section>
+
+    <section class="steps wrap">
+      <span><span class="n">1</span><b>Install</b> the extension</span>
+      <span><span class="n">2</span>Open DevTools → <b>NetDigest</b> tab</span>
+      <span><span class="n">3</span><b>Copy TOON</b> into your LLM</span>
+    </section>
+
+    <footer class="wrap">
+      NetDigest — open source, no tracking, everything stays in your DevTools.
+      <a href="https://github.com/djdevpro/net-digest">GitHub</a>
+    </footer>
+  </body>
+</html>
