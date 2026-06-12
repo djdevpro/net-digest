@@ -5,7 +5,7 @@ This project follows the spirit of the [Contributor Covenant v2.1](https://www.c
 **In short:**
 
 - Be respectful and constructive. Critique code, not people.
-- No harassment, discrimination, trolling, or personal attacks — in issues, PRs, or anywhere project-related.
+- No harassment, discrimination, trolling, or personal attacks, in issues, PRs, or anywhere project-related.
 - Assume good faith; disagreements are fine, contempt is not.
 
 Maintainers may edit, hide, or remove contributions that violate these rules, and ban repeat offenders.

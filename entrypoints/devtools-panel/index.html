@@ -47,22 +47,22 @@
         </button>
       </div>
       <div class="filters">
-        <label class="chip" title="XHR/fetch calls with API-like content (JSON, XML…) — excludes images, fonts, HTML/RSC text and binaries even when loaded via fetch. Errors (4xx/5xx/failed) are ALWAYS kept, whatever their content type.">
+        <label class="chip" title="XHR/fetch calls with API-like content (JSON, XML…): excludes images, fonts, HTML/RSC text and binaries even when loaded via fetch. Errors (4xx/5xx/failed) are ALWAYS kept, whatever their content type.">
           <input type="checkbox" id="api-only" checked /><span>API only</span>
         </label>
         <label class="chip" title="Only show requests to the inspected page's domain (subdomains included)">
           <input type="checkbox" id="same-site" checked /><span>same domain</span>
         </label>
-        <label class="chip" title="Include whitelisted debug headers (cache, CORS, tracing) in exports — auth and cookies are never captured">
+        <label class="chip" title="Include whitelisted debug headers (cache, CORS, tracing) in exports; auth and cookies are never captured">
           <input type="checkbox" id="headers" /><span>headers</span>
         </label>
-        <label class="chip" title="Show only recorded actions (clicks, form submits, navigations) — no requests. The user-flow story on its own.">
+        <label class="chip" title="Show only recorded actions (clicks, form submits, navigations): no requests. The user-flow story on its own.">
           <input type="checkbox" id="flow-only" /><span>flow only</span>
         </label>
         <label class="chip" title="Collapse query-param variations: keep only the first request per method + URL path (e.g. one /api/param-libs instead of all TYP_LIBSIMPLE=… variants)">
           <input type="checkbox" id="unique" /><span>1 per endpoint</span>
         </label>
-        <div id="detail" class="seg" role="radiogroup" title="Export detail — S: 64 chars / 1 item / depth 3 · M: 255 / 3 / depth 6 · L: 1024 / 8 / depth 10. All object keys are always kept.">
+        <div id="detail" class="seg" role="radiogroup" title="Export detail. S: 64 chars / 1 item / depth 3 · M: 255 / 3 / depth 6 · L: 1024 / 8 / depth 10. All object keys are always kept.">
           <button data-level="S">S</button>
           <button data-level="M" class="on">M</button>
           <button data-level="L">L</button>

@@ -14,4 +14,4 @@ You can expect an acknowledgement within a few days. Please give us reasonable t
 
 ## Supported versions
 
-Only the latest released version is supported — the extension has no server side, so updating is the fix.
+Only the latest released version is supported. The extension has no server side, so updating is the fix.

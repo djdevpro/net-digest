@@ -28,7 +28,7 @@ const PREAMBLE = [
   '# "***" = redacted secret; "count" = identical calls merged (same method+URL+status);',
   '# "initiator" = the app code (file:line:col + function/hook) that triggered the call;',
   '# "type: marker" rows are timeline steps recorded from user interactions',
-  '# (page, clicks, form submits, navigations) — they explain what triggered the requests after them.',
+  '# (page, clicks, form submits, navigations): each step explains the requests that follow it.',
 ].join('\n');
 
 const MAP_PREAMBLE = [
@@ -81,7 +81,7 @@ function applyTheme() {
 applyTheme();
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
 
-// Any problem becomes visible in the panel itself — no need to inspect its console.
+// Any problem becomes visible in the panel itself - no need to inspect its console.
 window.addEventListener('error', (e) => {
   previewEl.textContent = `Panel error: ${e.message}`;
 });
@@ -206,7 +206,7 @@ ovCharsEl.addEventListener('change', applyOverrideFromBar);
 
 const ovCopyBtn = document.getElementById('ov-copy') as HTMLButtonElement;
 ovCopyBtn.addEventListener('click', async () => {
-  // Copy the preview exactly as shown — override applied, no preamble.
+  // Copy the preview exactly as shown - override applied, no preamble.
   await copyText(previewEl.textContent ?? '');
   flash(ovCopyBtn, 'copied ✓');
 });
@@ -289,7 +289,7 @@ function connect() {
     connectAttempts++;
     if (connectAttempts === 20) {
       // 2s without a bridge: the devtools page predates the extension reload
-      countEl.textContent = 'capture bridge not found — close and reopen DevTools';
+      countEl.textContent = 'capture bridge not found: close and reopen DevTools';
     }
     setTimeout(connect, 100);
     return;
@@ -379,7 +379,7 @@ function contextHeader(list: CompactEntry[]): string {
   const host = bridge?.pageHost ?? 'unknown host';
   if (!real.length) return `# Captured from ${host}.`;
   const times = real.map((e) => e.startedDateTime).sort();
-  return `# Captured from ${host} — ${times[0]} → ${times[times.length - 1]} — ${real.length} unique requests.`;
+  return `# Captured from ${host}, ${times[0]} → ${times[times.length - 1]}, ${real.length} unique requests.`;
 }
 
 function exportToon(): string {
@@ -450,7 +450,7 @@ function render() {
       (tokens ? ` • ≈ ${fmtTokens(tokens)} tokens` : '') +
       (ovCount ? ` • ${ovCount} endpoint override${ovCount > 1 ? 's' : ''}` : '') +
       (bridge.dropped ? ` (${bridge.dropped} oldest purged)` : '') +
-      (bridge.recording ? ' — ● REC' : ' — listening ✓')
+      (bridge.recording ? ' · ● REC' : ' · listening ✓')
     : 'connecting to capture…';
 
   syncOverrideBar(sel);
@@ -494,13 +494,13 @@ function render() {
   previewEl.classList.toggle('placeholder', !sel.length && !apiMapView && !bridge?.error);
   if (sel.length) {
     const shown = exportList(sel.slice(0, MAX_PREVIEW));
-    const header = sel.length > 1 ? `# ${sel.length} selected requests — Copy/Download exports them all\n` : '';
+    const header = sel.length > 1 ? `# ${sel.length} selected requests: Copy/Download exports them all\n` : '';
     const frag = highlightToon(header + toonEncode(shown));
     if (sel.length > MAX_PREVIEW) {
       frag.append(
         span(
           't-comment',
-          `\n… preview limited to ${MAX_PREVIEW} requests — the TOON export will include all ${sel.length}.`,
+          `\n… preview limited to ${MAX_PREVIEW} requests, the TOON export will include all ${sel.length}.`,
         ),
       );
     }
@@ -516,12 +516,12 @@ function render() {
   } else if (visible.length === 0) {
     previewEl.textContent = searchEl.value.trim()
       ? 'No requests match the filter.'
-      : 'Nothing passes the filters — uncheck "XHR/Fetch" or "same domain" to see everything.';
+      : 'Nothing passes the filters. Uncheck "API only" or "same domain" to see everything.';
   } else {
     previewEl.textContent =
       'Click a request to preview it.\n' +
       'Ctrl+click: add/remove • Shift+click: range • Esc: clear • Del: remove rows.\n' +
-      'Copy/Download TOON exports the selection — or everything filtered when nothing is selected.';
+      'Copy/Download TOON exports the selection, or everything filtered when nothing is selected.';
   }
 }
 
@@ -632,7 +632,7 @@ apiMapBtn.addEventListener('click', async () => {
 const recBtn = document.getElementById('record') as HTMLButtonElement;
 recBtn.addEventListener('click', () => {
   if (!bridge?.setRecording) {
-    previewEl.textContent = 'Recorder unavailable — close and reopen DevTools to refresh the capture side.';
+    previewEl.textContent = 'Recorder unavailable: close and reopen DevTools to refresh the capture side.';
     return;
   }
   bridge.setRecording(!bridge.recording);

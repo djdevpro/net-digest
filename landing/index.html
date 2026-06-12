@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>NetDigest — Network → tokens</title>
+    <title>NetDigest · Network → tokens</title>
     <meta
       name="description"
-      content="A DevTools panel that turns noisy network traffic into a compact, secret-free TOON digest — small enough to paste into an LLM, complete enough to debug with."
+      content="A DevTools panel that turns noisy network traffic into a compact, secret-free TOON digest. Small enough to paste into an LLM, complete enough to debug with."
     />
     <link rel="icon" href="./icon.svg" />
     <style>
@@ -242,13 +242,62 @@
         padding: 56px 0 8px;
       }
 
+      @property --spin {
+        syntax: '<angle>';
+        inherits: false;
+        initial-value: 0deg;
+      }
+
       .card {
+        position: relative;
         padding: 1px;
         border-radius: 14px;
-        background: linear-gradient(180deg, rgba(138, 184, 232, 0.2), rgba(138, 184, 232, 0.03));
+        background: rgba(138, 184, 232, 0.1);
+        overflow: hidden;
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+      }
+
+      .card::before {
+        content: '';
+        position: absolute;
+        inset: -120%;
+        background: conic-gradient(
+          from var(--spin),
+          transparent 0deg,
+          rgba(94, 146, 204, 0.55) 38deg,
+          rgba(138, 184, 232, 0.16) 80deg,
+          transparent 130deg
+        );
+        opacity: 0.65;
+        animation: spin 7s linear infinite;
+        transition: opacity 0.25s ease;
+      }
+
+      @keyframes spin {
+        to {
+          --spin: 360deg;
+        }
+      }
+
+      .card:nth-child(2)::before { animation-duration: 9s; animation-delay: -3.2s; }
+      .card:nth-child(3)::before { animation-duration: 8s; animation-delay: -5.1s; }
+      .card:nth-child(4)::before { animation-duration: 10s; animation-delay: -1.6s; }
+      .card:nth-child(5)::before { animation-duration: 8.5s; animation-delay: -6.4s; }
+      .card:nth-child(6)::before { animation-duration: 9.5s; animation-delay: -2.4s; }
+
+      .card:hover {
+        transform: translateY(-4px);
+        box-shadow:
+          0 6px 16px -8px rgba(0, 0, 0, 0.6),
+          0 22px 48px -16px rgba(58, 110, 165, 0.5);
+      }
+
+      .card:hover::before {
+        opacity: 1;
       }
 
       .card-inner {
+        position: relative;
         height: 100%;
         border-radius: 13px;
         padding: 18px 18px 16px;
@@ -287,7 +336,7 @@
         gap: 26px;
         justify-content: center;
         flex-wrap: wrap;
-        padding: 34px 0 10px;
+        padding: 44px 0 26px;
         color: var(--muted);
         font-size: 15px;
       }
@@ -314,7 +363,22 @@
         text-align: center;
         color: var(--faint);
         font-size: 13.5px;
-        padding: 46px 0 38px;
+        padding: 84px 0 72px;
+        display: grid;
+        gap: 10px;
+      }
+
+      footer .author {
+        color: var(--muted);
+      }
+
+      footer .author a {
+        color: var(--accent-3);
+        text-decoration: none;
+      }
+
+      footer .author a:hover {
+        text-decoration: underline;
       }
 
       footer a {
@@ -338,8 +402,8 @@
       <h1>NetDigest</h1>
       <p class="tagline">Network <span class="arrow">→</span> tokens</p>
       <p class="sub">
-        A DevTools panel that turns noisy network traffic into a <strong>compact, secret-free TOON digest</strong> —
-        small enough to paste into an LLM, complete enough to debug with.
+        A DevTools panel that turns noisy network traffic into a <strong>compact, secret-free TOON digest</strong>.
+        Small enough to paste into an LLM, complete enough to debug with.
       </p>
       <div class="cta">
         <a class="btn primary" href="https://github.com/djdevpro/net-digest/releases" title="Chrome Web Store listing coming soon">
@@ -358,41 +422,40 @@
         <div class="frame-inner">
           <div class="titlebar">
             <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-            <span class="title">DevTools — NetDigest</span>
+            <span class="title">DevTools · NetDigest</span>
           </div>
           <iframe src="./app/demo.html" title="NetDigest live demo" loading="lazy"></iframe>
         </div>
       </div>
       <p class="live-hint">
-        <span class="pulse"></span>This is the <b>real extension</b>, running live on scripted demo traffic — click rows,
-        switch S/M/L, try the API map, copy the TOON.
+        <span class="pulse"></span>This is the <b>real extension</b> running on scripted demo traffic. Click rows, switch S/M/L, try the API map, copy the TOON.
       </p>
     </section>
 
     <section class="features wrap">
       <div class="card"><div class="card-inner">
         <h3><span class="tag">×12</span> Dedup &amp; diff</h3>
-        <p>Identical calls merge into one entry; array items after the first only show what changed. The shape once, never twice.</p>
+        <p>Identical calls collapse into a single entry, and after the first array item you only see what changed. You pay for the shape once.</p>
       </div></div>
       <div class="card"><div class="card-inner">
         <h3><span class="tag">***</span> Secrets redacted</h3>
-        <p>Passwords, tokens, API keys and JWT-looking values are stripped at capture time. Auth headers never reach memory.</p>
+        <p>Passwords, tokens, API keys and anything that looks like a JWT get stripped the moment they are captured. Auth headers never even reach memory.</p>
       </div></div>
       <div class="card"><div class="card-inner">
         <h3><span class="tag">S·M·L</span> Budget control</h3>
-        <p>Three detail levels, a live token counter, and per-endpoint overrides when one response deserves more.</p>
+        <p>Three detail levels, a live token counter, and per-endpoint overrides for the one response that deserves more room.</p>
       </div></div>
       <div class="card"><div class="card-inner">
         <h3><span class="tag">⚑ REC</span> Flow recorder</h3>
-        <p>Clicks, form submits and SPA navigations become timeline steps — the model sees what triggered every request.</p>
+        <p>Clicks, form submits and SPA navigations become timeline steps, so the model knows what triggered every request.</p>
       </div></div>
       <div class="card"><div class="card-inner">
         <h3><span class="tag">{ }</span> API map</h3>
-        <p>One click condenses the traffic into a normalized endpoint contract: methods, statuses, query keys, example shapes.</p>
+        <p>One click condenses the whole session into a normalized endpoint contract: methods, statuses, query keys, example shapes.</p>
       </div></div>
       <div class="card"><div class="card-inner">
         <h3><span class="tag">src/</span> Initiators</h3>
-        <p>Source maps resolve every call back to the hook that fired it — <code>useArticles.useQuery</code>, not a hashed chunk.</p>
+        <p>Source maps trace every call back to the hook that fired it: <code>useArticles.useQuery</code> instead of a hashed chunk.</p>
       </div></div>
     </section>
 
@@ -403,8 +466,8 @@
     </section>
 
     <footer class="wrap">
-      NetDigest — open source, no tracking, everything stays in your DevTools.
-      <a href="https://github.com/djdevpro/net-digest">GitHub</a>
+      <span>NetDigest is open source. No tracking, no servers: everything stays in your DevTools.</span>
+      <span class="author">Built by <a href="https://djidjelli.fr">Youcef Djidjelli</a> · <a href="https://djidjelli.fr">djidjelli.fr</a> · <a href="https://github.com/djdevpro/net-digest">GitHub</a></span>
     </footer>
   </body>
 </html>
