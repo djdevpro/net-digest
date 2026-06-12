@@ -21,13 +21,27 @@ for (const dir of ['chunks', 'assets']) {
 // demo.html = the real panel page, with root-relative URLs made relative
 // (GitHub Pages serves under /net-digest/) and the demo bridge injected
 // BEFORE the panel module script (classic script in <head> runs first).
+// noindex: search engines should rank the landing, not the bare app frame.
 let html = readFileSync(`${SRC}/devtools-panel.html`, 'utf8');
 html = html.replaceAll('"/chunks/', '"./chunks/').replaceAll('"/assets/', '"./assets/');
-html = html.replace('</head>', '  <script src="./demo-bridge.js"></script>\n</head>');
+html = html.replace(
+  '</head>',
+  '  <meta name="robots" content="noindex" />\n  <script src="./demo-bridge.js"></script>\n</head>',
+);
 writeFileSync(`${OUT}/app/demo.html`, html);
 
 cpSync('landing/demo-bridge.js', `${OUT}/app/demo-bridge.js`);
 cpSync('landing/index.html', `${OUT}/index.html`);
 cpSync('public/icon.svg', `${OUT}/icon.svg`);
+cpSync('public/icon', `${OUT}/icon`, { recursive: true });
+cpSync('.github/assets/hero.jpg', `${OUT}/og.jpg`); // social sharing image
+
+// crawler plumbing
+const BASE = 'https://djdevpro.github.io/net-digest/';
+writeFileSync(`${OUT}/robots.txt`, `User-agent: *\nAllow: /\nDisallow: /app/\nSitemap: ${BASE}sitemap.xml\n`);
+writeFileSync(
+  `${OUT}/sitemap.xml`,
+  `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>${BASE}</loc><changefreq>monthly</changefreq></url>\n</urlset>\n`,
+);
 
 console.log('landing/dist ready — preview with:  npx serve landing/dist');
