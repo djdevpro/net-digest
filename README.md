@@ -83,7 +83,7 @@ Or `pnpm build` and load `.output/chrome-mv3` as an unpacked extension.
 3. Cherry-pick endpoints (`Ctrl+click`), pick a detail level, **Copy TOON**
 4. Paste into your LLM. That's it.
 
-🖥️ **Try it without installing:** `pnpm landing && npx serve landing/dist` — the landing page embeds the *real, unmodified* panel running on scripted demo traffic.
+🖥️ **Try it without installing:** **[djdevpro.github.io/net-digest](https://djdevpro.github.io/net-digest/)** — the landing page embeds the *real, unmodified* panel running on scripted demo traffic (locally: `pnpm landing && npx serve landing/dist`).
 
 ## How the compaction thinks
 
