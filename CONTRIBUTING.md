@@ -33,11 +33,12 @@ Two invariants to respect:
 
 ```bash
 pnpm compile   # tsc --noEmit, must pass
+pnpm test      # vitest, covers everything under utils/
 pnpm build     # must produce a clean .output/chrome-mv3
 pnpm landing   # optional: rebuilds the landing demo from the fresh bundle
 ```
 
-There is no test runner wired up yet; if you add logic to `utils/`, a small standalone repro in the PR description is appreciated.
+CI runs the same three checks on every pull request. If you touch `utils/`, add or adjust the matching `*.test.ts` next to it: the compaction markers, redaction rules and sourcemap resolution are exactly the kind of logic that regresses silently.
 
 ## Pull requests
 

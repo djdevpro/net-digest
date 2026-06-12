@@ -9,6 +9,7 @@
 ## How it was verified
 
 - [ ] `pnpm compile` passes
+- [ ] `pnpm test` passes (add/adjust tests when touching `utils/`)
 - [ ] `pnpm build` produces a clean bundle
 - [ ] Tested in DevTools (extension reloaded + DevTools reopened)
 - [ ] If output format changed: example TOON export attached below
