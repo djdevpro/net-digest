@@ -1,4 +1,4 @@
-# Chrome Web Store listing — NetDigest
+# Chrome Web Store listing: NetDigest
 
 ## Name
 NetDigest
@@ -11,21 +11,21 @@ Developer Tools
 
 ## Full description
 
-NetDigest is a DevTools panel that turns noisy network traffic into a compact, shareable digest — small enough to paste into an LLM, complete enough to debug with.
+NetDigest is a DevTools panel that turns noisy network traffic into a compact, shareable digest: small enough to paste into an LLM, complete enough to debug with.
 
 WHAT IT DOES
 • Captures XHR/fetch traffic from the moment DevTools opens (HAR-grade data, including request payloads and response bodies)
 • Recursively truncates values while preserving the full object shape (strings, arrays, base64/binary)
 • Merges identical calls (same method+URL+status) into a single ×N entry
-• Redacts secrets automatically: passwords, tokens, API keys, JWTs — they never even reach memory
+• Redacts secrets automatically: passwords, tokens, API keys, JWTs: they never even reach memory
 • Exports as TOON (Token-Oriented Object Notation), with a preamble that explains the truncation markers to the model
 
 WORKFLOW
 • Filter by XHR/fetch, same-domain (kills analytics/CDN/consent noise) and free-text search
-• Cherry-pick endpoints with Ctrl+click / Shift+click — the export contains exactly your selection
+• Cherry-pick endpoints with Ctrl+click / Shift+click: the export contains exactly your selection
 • Choose the export detail (S/M/L) and watch the estimated token cost live
 • Insert timeline markers ("clicked Save") so the model can correlate actions with requests
-• One-click API map: endpoints normalized (/articles/42 → /articles/:id), statuses, query keys and example shapes — the contract of your API in a few dozen lines
+• One-click API map: endpoints normalized (/articles/42 → /articles/:id), statuses, query keys and example shapes: the contract of your API in a few dozen lines
 
 PRIVACY
 • No data collection, no analytics, no remote servers. Everything stays in your DevTools.

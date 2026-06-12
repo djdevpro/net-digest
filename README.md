@@ -1,5 +1,5 @@
 <p align="center">
-  <img src=".github/assets/hero.jpg" alt="NetDigest — Network → tokens" width="100%" />
+  <img src=".github/assets/hero.jpg" alt="NetDigest, network to tokens" width="100%" />
 </p>
 
 <p align="center">
@@ -11,16 +11,16 @@
 </p>
 
 <p align="center">
-  <b>Your app's network traffic, ready to paste into an LLM — without burning your context window.</b>
+  <b>Your app's network traffic, ready to paste into an LLM. Without burning your context window.</b>
 </p>
 
 ---
 
-You're debugging with Claude, ChatGPT or Cursor. The model asks: *"what does the API actually return?"*
+You're debugging with Claude, ChatGPT or Cursor, and the model asks the inevitable question: *"what does the API actually return?"*
 
-Your options today are all bad: a **HAR export** is megabytes of headers, cookies and base64 noise. Hand-copying responses **loses the flow** (which click fired which call?). And both happily leak your **tokens and passwords**.
+Your options today are all bad. A **HAR export** weighs megabytes, full of headers, cookies and base64 noise. Copying responses by hand **loses the flow**: which click fired which call? And both happily leak your tokens and passwords.
 
-**NetDigest is one extra DevTools tab.** It captures the traffic you already see, strips everything an LLM doesn't need, and hands you a digest that reads like a story: *what the user did → what the app called → what came back.*
+**NetDigest is one extra DevTools tab.** It captures the traffic you already see, strips everything an LLM doesn't need, and hands you a digest that reads like a story: what the user did, what the app called, what came back.
 
 ## How much smaller?
 
@@ -31,9 +31,9 @@ NetDigest (TOON, M)       ███░░░░░░░░░░░░░░░
   + “1 per endpoint”      ██░░░░░░░░░░░░░░░░░░    12%   ~8,400 tokens
 ```
 
-Measured on a realistic 32-request session (large lists, a 456-key settings dump, duplicate polling, query variants) — reproduce it yourself with `pnpm bench`. Spot check from a real app: a **3.4 MB** `/users` response becomes **~60 lines** that still show every key.
+Measured on a realistic 32-request session: big lists, a 456-key settings dump, duplicate polling, query variants. Run `pnpm bench` to reproduce it. A spot check from a real app: a **3.4 MB** `/users` response becomes **~60 lines** that still show every key.
 
-And the structure survives: every object keeps **all** of its keys. What gets cut — long strings, repeated array items, deep nesting — is replaced by markers (`…[+147 items, 150 total]`) the model knows how to read, because every export starts with a preamble that explains them.
+The structure survives the diet. Every object keeps **all** of its keys. What gets cut (long strings, repeated array items, deep nesting) is replaced by markers like `…[+147 items, 150 total]`, and every export starts with a short preamble that teaches the model how to read them.
 
 ## What it looks like
 
@@ -55,35 +55,35 @@ And the structure survives: every object keeps **all** of its keys. What gets cu
       token: ***
 ```
 
-The click, the hook that fired the request, the payload with secrets already redacted, the response — in token-efficient [TOON](https://github.com/toon-format/toon).
+The click, the hook that fired the request, the payload with secrets already gone, the response. All in token-efficient [TOON](https://github.com/toon-format/toon).
 
 ## Features
 
-- 🪶 **Marker-aware compaction** — strings, arrays and depth are truncated; **every key survives**. Re-truncation always reports the *original* totals.
-- 🔁 **Dedup ×N + diff** — identical calls merge into one entry; array items after the first only show the fields that differ from item 0.
-- 🕵️ **Always-on redaction** — passwords, tokens, API keys, JWT-looking values → `***`. Auth headers and cookies are never captured at all.
-- 🎬 **Flow recorder** — one click arms it: clicks, form submits and SPA navigations become timeline steps between the requests they triggered.
-- 🧭 **Real initiators** — source maps resolve every call back to `src/hooks/useArticles.ts:18 (useArticles.useQuery)`, not a hashed chunk.
-- 🗺️ **API map** — one click condenses the session into a normalized endpoint contract: methods, statuses, query keys, example shapes.
-- 🎚️ **Token budget control** — S/M/L detail levels, per-endpoint overrides, live token counter in the status bar.
-- 🧹 **Curation** — API-only / same-domain / flow-only / 1-per-endpoint filters, search, multi-select, `Del` to drop rows.
+- 🪶 **Marker-aware compaction.** Strings, arrays and depth get truncated; every key survives. Re-truncation always reports the original totals.
+- 🔁 **Dedup and diff.** Identical calls merge into one entry. After the first array item, you only see the fields that changed.
+- 🕵️ **Always-on redaction.** Passwords, tokens, API keys and JWT-looking values become `***`. Auth headers and cookies are never captured in the first place.
+- 🎬 **Flow recorder.** One click arms it: clicks, form submits and SPA navigations become timeline steps between the requests they triggered.
+- 🧭 **Real initiators.** Source maps resolve every call back to `src/hooks/useArticles.ts:18 (useArticles.useQuery)` instead of a hashed chunk.
+- 🗺️ **API map.** One click condenses the session into a normalized endpoint contract: methods, statuses, query keys, example shapes.
+- 🎚️ **Token budget control.** S/M/L detail levels, a live token counter, per-endpoint overrides.
+- 🧹 **Curation.** API-only, same-domain, flow-only and 1-per-endpoint filters, search, multi-select, `Del` to drop rows.
 
 ## Quick start
 
 ```bash
 pnpm install
-pnpm wxt prepare   # pnpm 10 blocks postinstall scripts — run once
+pnpm wxt prepare   # pnpm 10 blocks postinstall scripts, run once
 pnpm dev           # opens Chrome with the extension loaded
 ```
 
 Or `pnpm build` and load `.output/chrome-mv3` as an unpacked extension.
 
-1. Open your app, hit `F12` → **NetDigest** tab (capture runs from the moment DevTools opens)
-2. Click **Record**, use your app, watch the story build itself
-3. Cherry-pick endpoints (`Ctrl+click`), pick a detail level, **Copy TOON**
+1. Open your app, hit `F12`, find the **NetDigest** tab. Capture runs from the moment DevTools opens.
+2. Click **Record**, use your app, watch the story build itself.
+3. Cherry-pick endpoints with `Ctrl+click`, pick a detail level, **Copy TOON**.
 4. Paste into your LLM. That's it.
 
-🖥️ **Try it without installing:** **[djdevpro.github.io/net-digest](https://djdevpro.github.io/net-digest/)** — the landing page embeds the *real, unmodified* panel running on scripted demo traffic (locally: `pnpm landing && npx serve landing/dist`).
+🖥️ **Try it without installing:** **[djdevpro.github.io/net-digest](https://djdevpro.github.io/net-digest/)** embeds the real, unmodified panel running on scripted demo traffic (locally: `pnpm landing && npx serve landing/dist`).
 
 ## How the compaction thinks
 
@@ -93,16 +93,16 @@ Or `pnpm build` and load `.output/chrome-mv3` as an unpacked extension.
 | **M** *(default)* | 255 chars | 3 | 6 | day-to-day debugging |
 | **L** | 1024 chars | 8 | 10 | deep dives |
 
-One endpoint deserves more? Select it and override `items / depth / chars` just for it — persisted forever.
+One endpoint deserves more? Select it, override `items / depth / chars` just for it, and the setting sticks for good.
 
 ## Privacy
 
-No backend, no analytics, no telemetry. Everything happens inside your DevTools session and leaves your machine only when **you** press copy. See [SECURITY.md](SECURITY.md).
+No backend, no analytics, no telemetry. Everything happens inside your DevTools session and only leaves your machine when **you** press copy. Details in [SECURITY.md](SECURITY.md).
 
 ## Contributing
 
-PRs welcome — the codebase is small and documented in [CONTRIBUTING.md](CONTRIBUTING.md) (dev setup, architecture map, the two invariants to respect). Changelog in [CHANGELOG.md](CHANGELOG.md).
+PRs are welcome. The codebase is small and mapped out in [CONTRIBUTING.md](CONTRIBUTING.md): dev setup, architecture, and the two invariants to respect. Release notes live in [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 
-[MIT](LICENSE) © Youcef Djidjelli
+[MIT](LICENSE) © [Youcef Djidjelli](https://djidjelli.fr)

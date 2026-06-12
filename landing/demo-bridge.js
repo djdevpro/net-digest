@@ -1,6 +1,6 @@
 // NetDigest landing demo: feeds the REAL panel (unmodified build) with scripted
 // traffic through the same bridge contract the devtools page uses. Classic
-// script — runs before the panel's module script.
+// script - runs before the panel's module script.
 (function () {
   'use strict';
 

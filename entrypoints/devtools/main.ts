@@ -27,7 +27,7 @@ interface DevtoolsRequest {
 }
 
 // Headers worth keeping for debugging (CORS, caching, tracing). Auth/cookies are
-// deliberately NOT captured — they never even reach memory.
+// deliberately NOT captured - they never even reach memory.
 const HEADER_WHITELIST = new Set([
   'cache-control',
   'content-encoding',
@@ -113,7 +113,7 @@ function push(entry: CompactEntry): boolean {
 }
 
 // ---- Initiator source snippets ----
-// The page's scripts are readable through devtools getResources() — no extra
+// The page's scripts are readable through devtools getResources() - no extra
 // permission. Contents are cached per URL and dropped on navigation.
 
 const sourceCache = new Map<string, Promise<string | null>>();
@@ -144,7 +144,7 @@ function getSource(url?: string): Promise<string | null> {
 // ---- Source maps: map bundled frames back to the original TS/JS files ----
 // Dev servers embed sourcesContent in their maps, so we can show the user's
 // real code. External .map files are fetched FROM THE PAGE (same-origin) via
-// an eval-polled fetch — the devtools page itself would be blocked by CORS.
+// an eval-polled fetch - the devtools page itself would be blocked by CORS.
 
 let fetchSeq = 0;
 function fetchInPage(url: string): Promise<string | null> {
@@ -234,8 +234,8 @@ async function resolveFrameLabel(frame: StackFrame): Promise<string | null> {
 }
 
 function attachSourceLabel(entry: CompactEntry, raw: HarInitiator | undefined) {
-  // The export keeps a single initiator line (via): remap the app frame — the
-  // hook/caller — to its original source file; fall back to the call site.
+  // The export keeps a single initiator line (via): remap the app frame - the
+  // hook/caller - to its original source file; fall back to the call site.
   const { top, app } = pickFrames(raw);
   const frame = app ?? top;
   if (!entry.initiator || !frame?.url) return;
@@ -377,7 +377,7 @@ const RECORDER_INSTALL = `(function(){
     var name = (f.getAttribute && (f.getAttribute('id') || f.getAttribute('name') || f.getAttribute('action'))) || 'form';
     record({ kind: 'submit', tag: 'form', label: String(name).slice(0, 80), at: Date.now() });
   }
-  // SPA route changes (pushState/replaceState/popstate) — invisible to devtools onNavigated
+  // SPA route changes (pushState/replaceState/popstate) - invisible to devtools onNavigated
   var lastNav = location.href;
   function pushNav(){
     if (location.href === lastNav) return;
@@ -426,7 +426,7 @@ function describeEvent(ev: RecorderEvent): string {
   return `click ${ev.tag ?? 'element'}${label}${href}`;
 }
 
-// Injection fails transiently while the page is mid-navigation — retry via the
+// Injection fails transiently while the page is mid-navigation - retry via the
 // poll loop and only give up after several consecutive failures.
 let installFailures = 0;
 
