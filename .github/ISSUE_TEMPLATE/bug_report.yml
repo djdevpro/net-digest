@@ -1,0 +1,36 @@
+name: Bug report
+description: Something captures wrong, renders wrong, or exports wrong
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: export
+    attributes:
+      label: TOON excerpt or screenshot
+      description: A few lines of the export (or a panel screenshot) showing the problem. Double-check nothing personal remains.
+      render: text
+  - type: input
+    id: version
+    attributes:
+      label: Extension version
+      placeholder: "1.0.0 (chrome://extensions)"
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser
+      placeholder: "Chrome 138 on Windows 11"
+    validations:
+      required: true
+  - type: textarea
+    id: app
+    attributes:
+      label: Target app context (optional)
+      description: Framework / dev server if relevant (e.g. Next.js 16 dev with Turbopack, Laravel API).

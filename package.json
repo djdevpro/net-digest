@@ -6,6 +6,8 @@
   "type": "module",
   "scripts": {
     "icons": "node scripts/icons.mjs",
+    "landing": "wxt build && node scripts/build-landing.mjs",
+    "bench": "esbuild scripts/benchmark.entry.mjs --bundle --format=esm --outfile=.bench.tmp.mjs --log-level=error && node .bench.tmp.mjs && node -e \"require('node:fs').unlinkSync('.bench.tmp.mjs')\"",
     "dev": "wxt",
     "dev:firefox": "wxt -b firefox",
     "build": "wxt build",
