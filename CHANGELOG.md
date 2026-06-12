@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.0 (2026-06-12)
+
+- Public landing page at https://djdevpro.github.io/net-digest/ embedding the real panel on scripted demo traffic, with a marquee feature carousel, full SEO layer (Open Graph, JSON-LD, sitemap) and mobile spacing.
+- Marketing README with a measured token benchmark (pnpm bench: about 7x smaller than a HAR export).
+- Community standards: license, contributing guide, code of conduct, security policy, issue and PR templates.
+- Quality gates: vitest suite (42 tests over the compaction, redaction, filtering, initiator and sourcemap logic) wired into CI; merges to main require green checks.
+- Release automation: this workflow builds, tests, zips and publishes the extension package.
+- Extension polish: subtle button gradients and shadows, humanized UI texts.
+
 ## 1.0.0 (2026-06-12)
 
 Initial release.

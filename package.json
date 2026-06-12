@@ -2,7 +2,7 @@
   "name": "netdigest",
   "description": "Compact network capture for DevTools, exported as token-efficient TOON",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
   "scripts": {
     "icons": "node scripts/icons.mjs",

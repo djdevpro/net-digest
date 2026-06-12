@@ -1,0 +1,40 @@
+name: Release
+
+on:
+  workflow_dispatch: # Actions tab → Release → Run workflow (version read from package.json)
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm wxt prepare # pnpm 10 blocks postinstall scripts
+      - run: pnpm compile
+      - run: pnpm test
+      - run: pnpm zip # .output/netdigest-<version>-chrome.zip
+
+      - id: meta
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.meta.outputs.version }}
+          name: NetDigest ${{ steps.meta.outputs.version }}
+          generate_release_notes: true
+          files: .output/netdigest-${{ steps.meta.outputs.version }}-chrome.zip
