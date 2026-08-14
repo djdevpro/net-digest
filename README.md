@@ -67,6 +67,7 @@ The click, the hook that fired the request, the payload with secrets already gon
 - 🗺️ **API map.** One click condenses the session into a normalized endpoint contract: methods, statuses, query keys, example shapes.
 - 🎚️ **Token budget control.** S/M/L detail levels, a live token counter, per-endpoint overrides.
 - 🧹 **Curation.** API-only, same-domain, flow-only and 1-per-endpoint filters, search, multi-select, `Del` to drop rows.
+- 🔎 **Find in the preview.** `Ctrl+F` searches the payload itself — keys, values, initiators — with match count, `Enter` / `Shift+Enter` to walk the hits.
 
 ## Quick start
 
