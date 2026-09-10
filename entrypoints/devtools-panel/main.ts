@@ -100,6 +100,7 @@ function loadSettings() {
     flowOnlyEl.checked = s.flowOnly ?? false;
     uniqueEl.checked = s.unique ?? false;
     searchEl.value = s.search ?? '';
+    findEl.value = s.find ?? '';
     if (s.detail in DETAIL_LEVELS) detail = s.detail;
     if (typeof s.leftWidth === 'number') setLeftWidth(s.leftWidth);
   } catch {
@@ -118,6 +119,7 @@ function saveSettings() {
       flowOnly: flowOnlyEl.checked,
       unique: uniqueEl.checked,
       search: searchEl.value,
+      find: findEl.value,
       detail,
       leftWidth: leftEl.style.width ? Math.round(leftEl.getBoundingClientRect().width) : null,
     }),
@@ -492,6 +494,7 @@ function render() {
   );
 
   previewEl.classList.toggle('placeholder', !sel.length && !apiMapView && !bridge?.error);
+  previewSearchable = !!(sel.length || apiMapView);
   if (sel.length) {
     const shown = exportList(sel.slice(0, MAX_PREVIEW));
     const header = sel.length > 1 ? `# ${sel.length} selected requests: Copy/Download exports them all\n` : '';
@@ -523,6 +526,8 @@ function render() {
       'Ctrl+click: add/remove • Shift+click: range • Esc: clear • Del: remove rows.\n' +
       'Copy/Download TOON exports the selection, or everything filtered when nothing is selected.';
   }
+
+  paintFind(); // the preview was just rebuilt: repaint the matches, without scrolling
 }
 
 function el(tag: string, className: string, text: string): HTMLElement {
@@ -596,6 +601,131 @@ function highlightToon(text: string): DocumentFragment {
   return frag;
 }
 
+// ---- Find in the preview ----
+// The list filter only sees method/status/URL: this one searches the rendered
+// payload itself (keys, values, markers, initiators). Marks are painted onto the
+// highlighted DOM after each render, and a match may straddle several syntax
+// spans ("IDSOCIETE: 46"), so one match becomes one <mark> per text node crossed.
+
+const findEl = document.getElementById('find') as HTMLInputElement;
+const findCountEl = document.getElementById('find-count')!;
+const findPrevBtn = document.getElementById('find-prev') as HTMLButtonElement;
+const findNextBtn = document.getElementById('find-next') as HTMLButtonElement;
+
+const MAX_HITS = 2000; // guard against a one-character search on a huge preview
+
+let findHits: HTMLElement[][] = []; // one row per match, its <mark> pieces in reading order
+let findIndex = 0;
+let previewSearchable = false; // false while the preview shows a placeholder or an error
+
+function clearFindMarks() {
+  const marks = previewEl.querySelectorAll('mark.find-hit');
+  for (const m of marks) m.replaceWith(m.textContent ?? '');
+  if (marks.length) previewEl.normalize(); // stitch the split text nodes back together
+  findHits = [];
+}
+
+function paintFind(scroll = false) {
+  clearFindMarks();
+  const needle = findEl.value.toLowerCase();
+  if (needle && previewSearchable) {
+    // flatten the preview into one string, remembering where each text node sits in it
+    const walker = document.createTreeWalker(previewEl, NodeFilter.SHOW_TEXT);
+    const nodes: Text[] = [];
+    const starts: number[] = [];
+    const ends: number[] = [];
+    let flat = '';
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+      const text = n as Text;
+      nodes.push(text);
+      starts.push(flat.length);
+      flat += text.data;
+      ends.push(flat.length);
+    }
+    const hay = flat.toLowerCase();
+    const ranges: [number, number][] = [];
+    for (
+      let i = hay.indexOf(needle);
+      i !== -1 && ranges.length < MAX_HITS;
+      i = hay.indexOf(needle, i + needle.length)
+    ) {
+      ranges.push([i, i + needle.length]);
+    }
+    // right to left: wrapping splits text nodes, which only moves what follows
+    let last = nodes.length - 1;
+    for (let r = ranges.length - 1; r >= 0; r--) {
+      const [from, to] = ranges[r];
+      while (last > 0 && starts[last] >= to) last--;
+      const pieces: HTMLElement[] = [];
+      for (let i = last; i >= 0 && ends[i] > from; i--) {
+        const node = nodes[i];
+        const lo = Math.max(0, from - starts[i]);
+        const hi = Math.min(node.data.length, to - starts[i]);
+        if (hi <= lo) continue;
+        if (hi < node.data.length) node.splitText(hi);
+        const target = lo > 0 ? node.splitText(lo) : node;
+        const mark = document.createElement('mark');
+        mark.className = 'find-hit';
+        target.replaceWith(mark);
+        mark.append(target);
+        pieces.push(mark);
+      }
+      pieces.reverse();
+      findHits.push(pieces);
+    }
+    findHits.reverse();
+  }
+  if (findIndex >= findHits.length) findIndex = 0;
+  syncFindBar(scroll);
+}
+
+function syncFindBar(scroll: boolean) {
+  const total = findHits.length;
+  findHits.forEach((pieces, i) => {
+    for (const mark of pieces) mark.classList.toggle('current', i === findIndex);
+  });
+  findCountEl.textContent = !findEl.value
+    ? ''
+    : total
+      ? `${findIndex + 1}/${total}${total === MAX_HITS ? '+' : ''}`
+      : 'no match';
+  findCountEl.classList.toggle('none', !!findEl.value && !total);
+  findPrevBtn.disabled = !total;
+  findNextBtn.disabled = !total;
+  if (scroll && total) findHits[findIndex][0].scrollIntoView({ block: 'nearest' });
+}
+
+function stepFind(delta: number) {
+  if (!findHits.length) return;
+  findIndex = (findIndex + delta + findHits.length) % findHits.length;
+  syncFindBar(true);
+}
+
+findEl.addEventListener('input', () => {
+  findIndex = 0;
+  paintFind(true);
+  saveSettings();
+});
+
+findEl.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    stepFind(e.shiftKey ? -1 : 1);
+    return;
+  }
+  if (e.key === 'Escape' && findEl.value) {
+    // Esc empties the find first: clearing the selection would throw away what is being read
+    e.stopPropagation();
+    findEl.value = '';
+    findIndex = 0;
+    paintFind();
+    saveSettings();
+  }
+});
+
+findPrevBtn.addEventListener('click', () => stepFind(-1));
+findNextBtn.addEventListener('click', () => stepFind(1));
+
 // ---- Actions ----
 
 async function copyText(text: string) {
@@ -664,6 +794,13 @@ document.getElementById('clear')!.addEventListener('click', () => {
 });
 
 window.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+    // the browser find bar never reaches a DevTools panel: this one does
+    e.preventDefault();
+    findEl.focus();
+    findEl.select();
+    return;
+  }
   if (e.key === 'Escape') {
     selection.clear();
     anchor = null;

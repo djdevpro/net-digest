@@ -113,6 +113,30 @@
           </button>
           <button id="ov-clear" class="btn mini" title="Remove the override for the selected endpoint(s)">reset</button>
         </div>
+        <div class="search-wrap find-wrap">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+          <input
+            id="find"
+            type="search"
+            placeholder="Find in the preview: any key or value…  (Ctrl+F)"
+            autocomplete="off"
+            aria-label="Find in the preview"
+          />
+          <span id="find-count" class="find-count" aria-live="polite"></span>
+          <button id="find-prev" class="btn mini find-nav" title="Previous match (Shift+Enter)" aria-label="Previous match">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="m6 15 6-6 6 6" />
+            </svg>
+          </button>
+          <button id="find-next" class="btn mini find-nav" title="Next match (Enter)" aria-label="Next match">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </button>
+        </div>
         <pre id="preview">Reload the target page, then select a request to see its compact version.</pre>
       </section>
     </main>

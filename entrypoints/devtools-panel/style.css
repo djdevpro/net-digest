@@ -31,6 +31,7 @@
   --syn-num: #6d4ca8;
   --syn-kw: #1d7a72;
   --syn-fields: #7a4fa3;
+  --find-hit: rgba(224, 170, 40, 0.45);
   --radius: 6px;
 }
 
@@ -65,6 +66,7 @@
     --syn-num: #ab96dd;
     --syn-kw: #76b8b0;
     --syn-fields: #b495d8;
+    --find-hit: rgba(212, 175, 110, 0.33);
   }
 }
 
@@ -98,6 +100,7 @@
   --syn-num: #ab96dd;
   --syn-kw: #76b8b0;
   --syn-fields: #b495d8;
+  --find-hit: rgba(212, 175, 110, 0.33);
 }
 
 * {
@@ -228,6 +231,17 @@ header {
 .btn:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+  box-shadow: none;
+}
+
+.btn:disabled:hover {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--btn-bg) 90%, #fff), var(--btn-bg));
+  border-color: var(--border);
 }
 
 .btn.primary {
@@ -431,7 +445,8 @@ body.resizing {
   pointer-events: none;
 }
 
-#search {
+#search,
+#find {
   width: 100%;
   padding: 5px 8px 5px 27px;
   background: var(--bg-input);
@@ -444,17 +459,62 @@ body.resizing {
   transition: border-color 0.12s, box-shadow 0.12s;
 }
 
-#search:hover {
+#search:hover,
+#find:hover {
   border-color: var(--border-strong);
 }
 
-#search:focus {
+#search:focus,
+#find:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 2px var(--accent-soft);
 }
 
-#search::placeholder {
+#search::placeholder,
+#find::placeholder {
   color: var(--faint);
+}
+
+/* ---- Recherche dans la prévisualisation ---- */
+
+.find-wrap {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.find-wrap #find {
+  flex: 1;
+  min-width: 0;
+}
+
+.find-count {
+  flex: none;
+  color: var(--muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.find-count.none {
+  color: var(--err);
+}
+
+.find-nav {
+  padding: 0 5px;
+}
+
+mark.find-hit {
+  background: var(--find-hit);
+  color: inherit;
+  border-radius: 2px;
+}
+
+mark.find-hit.current {
+  background: var(--accent);
+  color: #fff;
+  /* box-shadow plutôt que padding : la grille monospace ne doit pas bouger */
+  box-shadow: 0 0 0 1px var(--accent);
 }
 
 /* ---- Liste ---- */
