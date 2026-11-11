@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hostOf, isApiLike, isSameSite, isToolingNoise } from './bridge';
+import { hostOf, isApiLike, isSameSite, isToolingNoise, shortUrl } from './bridge';
 
 describe('hostOf', () => {
   it('extracts hostnames without port or credentials', () => {
@@ -28,6 +28,27 @@ describe('isSameSite', () => {
 
   it('lets everything through when the host is unknown', () => {
     expect(isSameSite('https://anything.dev/x', null)).toBe(true);
+  });
+});
+
+describe('shortUrl', () => {
+  it('keeps only path + query for same-site URLs, subdomains included', () => {
+    expect(shortUrl('https://api.example.dev/api/articles?page=2', 'app.example.dev')).toBe('/api/articles?page=2');
+    expect(shortUrl('http://127.0.0.1:8001/api/x#frag', '127.0.0.1')).toBe('/api/x');
+  });
+
+  it('always starts the path with a slash', () => {
+    expect(shortUrl('https://example.dev', 'example.dev')).toBe('/');
+    expect(shortUrl('https://example.dev?q=1', 'example.dev')).toBe('/?q=1');
+  });
+
+  it('keeps the host (and port) of third parties, never credentials', () => {
+    expect(shortUrl('https://cdn.cookielaw.org/consent/x.json', 'app.example.dev')).toBe('cdn.cookielaw.org/consent/x.json');
+    expect(shortUrl('http://user:pw@other.io:8080/a?b=1', 'app.example.dev')).toBe('other.io:8080/a?b=1');
+  });
+
+  it('returns non-URLs unchanged', () => {
+    expect(shortUrl('data:application/json,{}', 'example.dev')).toBe('data:application/json,{}');
   });
 });
 

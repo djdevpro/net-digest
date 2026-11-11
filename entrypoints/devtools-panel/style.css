@@ -182,9 +182,29 @@ header {
   box-shadow: 0 0 6px var(--chip-glow);
 }
 
+/* ---- Barre d'état sous la liste (façon Network DevTools) ---- */
+
 #count {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  overflow: hidden; /* rogne le séparateur du premier segment de chaque ligne */
+  border-top: 1px solid var(--border);
+  background: var(--bg-raised);
   color: var(--muted);
   font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+#count span {
+  margin: 4px 0 4px -1px;
+  padding: 1px 10px;
+  border-left: 1px solid var(--border-strong);
+  white-space: nowrap;
+}
+
+#count .rec {
+  color: var(--err);
 }
 
 /* ---- Boutons ---- */
@@ -423,10 +443,78 @@ body.resizing {
   cursor: col-resize;
 }
 
+/* Bouton de repli, dans le coin du volet qu'il replie */
+.pane-toggle {
+  flex: none;
+  padding: 0 5px;
+}
+
+.pane-toggle .rail-label,
+.pane-toggle .when-collapsed {
+  display: none;
+}
+
+/* Prévisualisation rabattue (comme le volet de détails du Network DevTools) :
+   elle se réduit à un rail qui ne garde que son bouton, la liste prend toute
+   la largeur. flex-basis 0 l'emporte sur la largeur inline, conservée pour
+   la réouverture. */
+main.preview-collapsed #resizer {
+  display: none;
+}
+
+main.preview-collapsed #left {
+  flex: 1 1 0;
+}
+
+main.preview-collapsed #right {
+  flex: none;
+  width: 36px;
+  border-left: 1px solid var(--border);
+  background: var(--bg-raised);
+}
+
+main.preview-collapsed #right > :not(.search-wrap),
+main.preview-collapsed #right .search-wrap > :not(.pane-toggle) {
+  display: none;
+}
+
+main.preview-collapsed #right .search-wrap {
+  margin: 8px auto;
+}
+
+main.preview-collapsed .pane-toggle {
+  flex-direction: column;
+  gap: 8px;
+  width: 24px;
+  height: auto;
+  padding: 6px 0 9px;
+}
+
+main.preview-collapsed .pane-toggle .when-open {
+  display: none;
+}
+
+main.preview-collapsed .pane-toggle .when-collapsed {
+  display: inline;
+}
+
+main.preview-collapsed .pane-toggle .rail-label {
+  display: block;
+  writing-mode: vertical-rl;
+  color: var(--muted);
+}
+
+main.preview-collapsed .pane-toggle:hover .rail-label {
+  color: var(--text);
+}
+
 /* ---- Recherche ---- */
 
 .search-wrap {
   position: relative;
+  display: flex;
+  align-items: center;
+  gap: 5px;
   margin: 8px;
   flex: none;
 }
@@ -444,7 +532,8 @@ body.resizing {
 
 #search,
 #find {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   padding: 5px 8px 5px 27px;
   background: var(--bg-input);
   border: 1px solid var(--border);
@@ -473,17 +562,6 @@ body.resizing {
 }
 
 /* ---- Recherche dans la prévisualisation ---- */
-
-.find-wrap {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.find-wrap #find {
-  flex: 1;
-  min-width: 0;
-}
 
 .find-count {
   flex: none;
@@ -599,6 +677,26 @@ mark.find-hit.current {
   color: var(--muted);
   flex: none;
   min-width: 48px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Colonnes de la liste pleine largeur (prévisualisation rabattue) */
+.initiator {
+  flex: 0 1 auto;
+  max-width: 34%;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 11px;
+}
+
+.size {
+  color: var(--muted);
+  flex: none;
+  min-width: 56px;
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
