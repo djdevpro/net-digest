@@ -10,7 +10,7 @@ import {
   type DetailLevel,
 } from '@/utils/compact';
 import { buildApiMap } from '@/utils/apimap';
-import { isApiLike, isSameSite, type BridgeWindow, type HarBridge } from '@/utils/bridge';
+import { isApiLike, isSameSite, shortUrl, type BridgeWindow, type HarBridge } from '@/utils/bridge';
 
 const API_TYPES = new Set(['xhr', 'fetch']);
 const MAX_PREVIEW = 50; // max entries encoded in the preview (the export is always complete)
@@ -42,6 +42,7 @@ const selection = new Set<CompactEntry>();
 let anchor: CompactEntry | null = null; // starting point for Shift+click ranges
 let detail: DetailLevel = 'M';
 let apiMapView: string | null = null; // pinned API-map preview (until Esc/click/clear)
+let previewCollapsed = false; // preview pane folded away: full-width request list
 
 const listEl = document.getElementById('list')!;
 const previewEl = document.getElementById('preview')!;
@@ -53,8 +54,10 @@ const flowOnlyEl = document.getElementById('flow-only') as HTMLInputElement;
 const uniqueEl = document.getElementById('unique') as HTMLInputElement;
 const searchEl = document.getElementById('search') as HTMLInputElement;
 const copyBtn = document.getElementById('copy') as HTMLButtonElement;
+const mainEl = document.querySelector('main')!;
 const leftEl = document.getElementById('left')!;
 const resizerEl = document.getElementById('resizer')!;
+const togglePreviewBtn = document.getElementById('toggle-preview') as HTMLButtonElement;
 const segEl = document.getElementById('detail')!;
 const ovBarEl = document.getElementById('override')!;
 const ovItemsEl = document.getElementById('ov-items') as HTMLInputElement;
@@ -103,10 +106,12 @@ function loadSettings() {
     findEl.value = s.find ?? '';
     if (s.detail in DETAIL_LEVELS) detail = s.detail;
     if (typeof s.leftWidth === 'number') setLeftWidth(s.leftWidth);
+    previewCollapsed = s.previewCollapsed === true;
   } catch {
     // corrupted settings → defaults
   }
   syncDetailButtons();
+  syncPreviewPane();
 }
 
 function saveSettings() {
@@ -121,7 +126,9 @@ function saveSettings() {
       search: searchEl.value,
       find: findEl.value,
       detail,
-      leftWidth: leftEl.style.width ? Math.round(leftEl.getBoundingClientRect().width) : null,
+      // the inline width, not the measured one: a folded preview stretches the list
+      leftWidth: leftEl.style.width ? Math.round(Number.parseFloat(leftEl.style.width)) : null,
+      previewCollapsed,
     }),
   );
 }
@@ -281,6 +288,31 @@ resizerEl.addEventListener('keydown', (e) => {
   saveSettings();
 });
 
+// ---- Folding the preview pane ----
+// Like the details pane of the DevTools Network panel: folded down to a thin rail
+// (its toggle stays in the pane's top-right corner), the request list takes the
+// full width and shows complete URLs, initiators and sizes; open, the list
+// switches to a reduced mode (path only) next to the preview.
+
+function syncPreviewPane() {
+  mainEl.classList.toggle('preview-collapsed', previewCollapsed);
+  togglePreviewBtn.setAttribute('aria-expanded', String(!previewCollapsed));
+  togglePreviewBtn.title = previewCollapsed
+    ? 'Show the preview (Ctrl+B)'
+    : 'Hide the preview: full-width request list (Ctrl+B)';
+  togglePreviewBtn.setAttribute('aria-label', previewCollapsed ? 'Show the preview' : 'Hide the preview');
+}
+
+function setPreviewCollapsed(collapsed: boolean) {
+  if (collapsed === previewCollapsed) return;
+  previewCollapsed = collapsed;
+  syncPreviewPane();
+  saveSettings();
+  render(); // rows switch between the full and reduced layouts
+}
+
+togglePreviewBtn.addEventListener('click', () => setPreviewCollapsed(!previewCollapsed));
+
 // ---- Connection to the capture side ----
 
 // The devtools page attaches the bridge via panel.onShown; poll until it shows up.
@@ -291,7 +323,7 @@ function connect() {
     connectAttempts++;
     if (connectAttempts === 20) {
       // 2s without a bridge: the devtools page predates the extension reload
-      countEl.textContent = 'capture bridge not found: close and reopen DevTools';
+      setStatus(['capture bridge not found: close and reopen DevTools']);
     }
     setTimeout(connect, 100);
     return;
@@ -426,6 +458,7 @@ function onRowClick(entry: CompactEntry, ev: MouseEvent) {
     selection.add(entry);
     anchor = entry;
   }
+  // a folded preview stays folded: selecting rows on the wide list never reopens it
   render();
   previewEl.scrollTop = 0; // show the preview from its first selected request
 }
@@ -434,6 +467,13 @@ function onRowClick(entry: CompactEntry, ev: MouseEvent) {
 
 function fmtTokens(n: number): string {
   return n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n);
+}
+
+function fmtSize(bytes: number | undefined): string {
+  if (bytes === undefined || bytes < 0) return '';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} kB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 function render() {
@@ -447,17 +487,22 @@ function render() {
   ).size;
   const selectedMs = sel.reduce((sum, e) => sum + e.time, 0);
 
-  countEl.textContent = bridge
-    ? `${visible.length} shown / ${all.length} captured` +
-      (sel.length ? ` • ${sel.length} selected (Esc to clear)` : '') +
-      (tokens ? ` • ≈ ${fmtTokens(tokens)} tokens` : '') +
-      (ovCount ? ` • ${ovCount} endpoint override${ovCount > 1 ? 's' : ''}` : '') +
-      (bridge.dropped ? ` (${bridge.dropped} oldest purged)` : '') +
-      (bridge.recording ? ' · ● REC' : ' · listening ✓') +
-      (selectedMs ? ` · total ${selectedMs} ms` : '')
-    : 'connecting to capture…';
+  setStatus(
+    bridge
+      ? [
+          `${visible.length} shown / ${all.length} captured` +
+            (bridge.dropped ? ` (${bridge.dropped} oldest purged)` : ''),
+          sel.length ? `${sel.length} selected (Esc to clear)` : null,
+          selectedMs ? `total ${selectedMs} ms` : null,
+          tokens ? `≈ ${fmtTokens(tokens)} tokens` : null,
+          ovCount ? `${ovCount} endpoint override${ovCount > 1 ? 's' : ''}` : null,
+          bridge.recording ? { text: '● REC', cls: 'rec' } : 'listening ✓',
+        ]
+      : ['connecting to capture…'],
+  );
 
   syncOverrideBar(sel);
+  const pageHost = bridge?.pageHost ?? null;
 
   recBtn.classList.toggle('recording', !!bridge?.recording);
   const recLabel = recBtn.querySelector('.btn-label');
@@ -474,14 +519,25 @@ function render() {
         li.append(el('span', 'flag', '⚑'), label);
       } else {
         const ok = entry.status >= 200 && entry.status < 400;
-        const url = el('span', 'url', entry.url);
+        // full mode (preview folded): the whole URL; reduced mode: path (+ host of third parties)
+        const url = el('span', 'url', previewCollapsed ? entry.url : shortUrl(entry.url, pageHost));
         url.title = entry.url;
         li.append(
           el('span', 'method', entry.method),
           el('span', `status ${ok ? 'ok' : 'err'}`, String(entry.status)),
         );
         if (entry.count && entry.count > 1) li.append(el('span', 'dup', `×${entry.count}`));
-        li.append(url, el('span', 'time', `${entry.time} ms`));
+        li.append(url);
+        if (previewCollapsed) {
+          const initiatorLabel = entry.initiator?.via ?? entry.initiator?.at;
+          if (initiatorLabel) {
+            const initiator = el('span', 'initiator', initiatorLabel);
+            initiator.title = initiatorLabel;
+            li.append(initiator);
+          }
+          li.append(el('span', 'size', fmtSize(entry.responseSize)));
+        }
+        li.append(el('span', 'time', `${entry.time} ms`));
       }
       const rm = el('button', 'rm', '×') as HTMLButtonElement;
       rm.title = 'Remove this row (Del removes the whole selection)';
@@ -525,11 +581,24 @@ function render() {
   } else {
     previewEl.textContent =
       'Click a request to preview it.\n' +
-      'Ctrl+click: add/remove • Shift+click: range • Esc: clear • Del: remove rows.\n' +
+      'Ctrl+click: add/remove • Shift+click: range • Ctrl+A: all • Esc: clear • Del: remove rows.\n' +
       'Copy/Download TOON exports the selection, or everything filtered when nothing is selected.';
   }
 
   paintFind(); // the preview was just rebuilt: repaint the matches, without scrolling
+}
+
+/** Status bar under the list: one separated segment per fact, empty ones skipped. */
+function setStatus(parts: (string | { text: string; cls: string } | null)[]) {
+  countEl.replaceChildren(
+    ...parts
+      .filter((p) => p !== null)
+      .map((p) => (typeof p === 'string' ? el('span', '', p) : el('span', p.cls, p.text))),
+  );
+}
+
+function isTextField(target: EventTarget | null): target is HTMLInputElement | HTMLTextAreaElement {
+  return target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement;
 }
 
 function el(tag: string, className: string, text: string): HTMLElement {
@@ -756,7 +825,8 @@ apiMapBtn.addEventListener('click', async () => {
   apiMapView = `${MAP_PREAMBLE}\n${contextHeader(list)}\n\n${toonEncode(map)}`;
   selection.clear();
   anchor = null;
-  render();
+  if (previewCollapsed) setPreviewCollapsed(false); // the map is meant to be read (renders)
+  else render();
   await copyText(apiMapView);
   flash(apiMapBtn, 'Copied ✓');
 });
@@ -799,8 +869,28 @@ window.addEventListener('keydown', (e) => {
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
     // the browser find bar never reaches a DevTools panel: this one does
     e.preventDefault();
+    setPreviewCollapsed(false); // the find bar lives in the preview pane
     findEl.focus();
     findEl.select();
+    return;
+  }
+  if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 'b') {
+    e.preventDefault();
+    setPreviewCollapsed(!previewCollapsed);
+    return;
+  }
+  const plainMod = (e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey;
+  if (plainMod && e.key.toLowerCase() === 'a') {
+    if (isTextField(e.target)) return; // inside a field: native select-all of its text
+    e.preventDefault();
+    const visible = visibleEntries();
+    if (!visible.length) return;
+    apiMapView = null;
+    selection.clear();
+    for (const entry of visible) selection.add(entry);
+    anchor = visible[0];
+    render();
+    previewEl.scrollTop = 0;
     return;
   }
   if (e.key === 'Escape') {
@@ -812,7 +902,7 @@ window.addEventListener('keydown', (e) => {
   }
   if ((e.key === 'Delete' || e.key === 'Backspace') && selection.size) {
     const target = e.target as HTMLElement | null;
-    if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) return;
+    if (isTextField(target)) return;
     e.preventDefault();
     removeEntries(selectedEntries());
   }

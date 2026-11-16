@@ -82,3 +82,17 @@ export function isSameSite(url: string, pageHost: string | null): boolean {
   const base = pageHost.split('.').slice(-2).join('.');
   return host === base || host.endsWith(`.${base}`);
 }
+
+/**
+ * Short label for the reduced request list (preview pane open): path + query
+ * for same-site URLs, where the origin is noise; host + path + query for third
+ * parties, so they stay recognizable. Fragment and credentials are dropped.
+ * Anything that is not an absolute URL comes back unchanged.
+ */
+export function shortUrl(url: string, pageHost: string | null): string {
+  const m = /^[a-z][a-z0-9+.-]*:\/\/([^/?#]*)([^#]*)/i.exec(url);
+  if (!m) return url;
+  const rest = m[2].startsWith('/') ? m[2] : `/${m[2]}`;
+  if (isSameSite(url, pageHost)) return rest;
+  return `${m[1].split('@').pop()}${rest}`;
+}

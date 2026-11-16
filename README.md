@@ -66,8 +66,9 @@ The click, the hook that fired the request, the payload with secrets already gon
 - 🧭 **Real initiators.** Source maps resolve every call back to `src/hooks/useArticles.ts:18 (useArticles.useQuery)` instead of a hashed chunk.
 - 🗺️ **API map.** One click condenses the session into a normalized endpoint contract: methods, statuses, query keys, example shapes.
 - 🎚️ **Token budget control.** S/M/L detail levels, a live token counter, per-endpoint overrides.
-- 🧹 **Curation.** API-only, same-domain, flow-only and 1-per-endpoint filters, search, multi-select, `Del` to drop rows.
+- 🧹 **Curation.** API-only, same-domain, flow-only and 1-per-endpoint filters, search, multi-select (`Ctrl+A` selects everything shown), `Del` to drop rows.
 - 🔎 **Find in the preview.** `Ctrl+F` searches the payload itself — keys, values, initiators — with match count, `Enter` / `Shift+Enter` to walk the hits.
+- 📐 **Foldable preview.** Like the DevTools Network details pane: fold it into a thin rail (`Ctrl+B`) for a full-width list with complete URLs, initiators and sizes; open it and the list switches to a reduced, path-only view. It stays folded while you select requests.
 
 ## Quick start
 
